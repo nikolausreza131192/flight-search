@@ -125,6 +125,37 @@ func TestSearchFiltersDirectFlights(t *testing.T) {
 	}
 }
 
+func TestSearchEchoesFiltersAndSort(t *testing.T) {
+	svc := newTestUseCase(t)
+	req := oneWay("CGK", "DPS", "2025-12-15")
+	zero, maxPrice := 0, 1000000.0
+	req.Filters = &usecase.Filters{MaxStops: &zero, MaxPrice: &maxPrice, Airlines: []string{"QZ"}}
+	req.Sort = &usecase.SortSpec{By: usecase.SortPrice, Order: "asc"}
+
+	resp, err := svc.Search(context.Background(), req)
+	if err != nil {
+		t.Fatalf("search: %v", err)
+	}
+
+	f := resp.SearchCriteria.Filters
+	if f == nil {
+		t.Fatal("expected filters echoed in search criteria")
+	}
+	if f.MaxStops == nil || *f.MaxStops != 0 {
+		t.Fatalf("max_stops = %v, want 0", f.MaxStops)
+	}
+	if f.MaxPrice == nil || *f.MaxPrice != maxPrice {
+		t.Fatalf("max_price = %v, want %v", f.MaxPrice, maxPrice)
+	}
+	if len(f.Airlines) != 1 || f.Airlines[0] != "QZ" {
+		t.Fatalf("airlines = %v, want [QZ]", f.Airlines)
+	}
+	s := resp.SearchCriteria.Sort
+	if s == nil || s.By != usecase.SortPrice || s.Order != "asc" {
+		t.Fatalf("sort = %+v, want {price asc}", s)
+	}
+}
+
 func TestSearchScalesPriceByPassengers(t *testing.T) {
 	svc := newTestUseCase(t)
 	req := oneWay("CGK", "DPS", "2025-12-15")
@@ -146,10 +177,17 @@ func TestSearchRoundTrip(t *testing.T) {
 	ret := "2025-12-20"
 	req := oneWay("CGK", "DPS", "2025-12-15")
 	req.ReturnDate = &ret
+	// filters and sort do not apply to round-trip, so they must not be echoed.
+	zero := 0
+	req.Filters = &usecase.Filters{MaxStops: &zero}
+	req.Sort = &usecase.SortSpec{By: usecase.SortPrice, Order: "asc"}
 
 	resp, err := svc.Search(context.Background(), req)
 	if err != nil {
 		t.Fatalf("search: %v", err)
+	}
+	if resp.SearchCriteria.Filters != nil || resp.SearchCriteria.Sort != nil {
+		t.Fatalf("round-trip must not echo filters/sort: %+v", resp.SearchCriteria)
 	}
 	if len(resp.Itineraries) == 0 {
 		t.Fatal("expected round trip itineraries")

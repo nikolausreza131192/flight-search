@@ -1,4 +1,4 @@
-# bookcabin — Flight Schedule Search & Aggregation API
+# Flight Schedule Search & Aggregation API
 
 ## Approach
 
@@ -28,12 +28,49 @@ go build ./...
 go run ./cmd/http        # listens on :8080
 ```
 
-Search:
+Run tests:
+
+```bash
+go test ./...
+```
+
+Search (one-way):
 
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/flights/search \
   -H 'Content-Type: application/json' \
   -d '{"origin":"CGK","destination":"DPS","departureDate":"2025-12-15","passengers":1,"cabinClass":"economy"}'
+```
+
+Search (one-way with filters & sort):
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/flights/search \
+  -H 'Content-Type: application/json' \
+  -d '{"origin":"CGK","destination":"DPS","departureDate":"2025-12-15","passengers":1,"cabinClass":"economy","filters":{"maxStops":0,"maxPrice":1000000,"airlines":["QZ"]},"sort":{"by":"price","order":"asc"}}'
+```
+
+Search (round-trip):
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/flights/search \
+  -H 'Content-Type: application/json' \
+  -d '{"origin":"CGK","destination":"DPS","departureDate":"2026-12-16","passengers":2,"cabinClass":"first","returnDate":"2026-12-18"}'
+```
+
+Search (multi-city):
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/flights/search \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "multiCity": [
+    { "origin": "CGK", "destination": "DPS", "departureDate": "2025-12-15" },
+    { "origin": "DPS", "destination": "CGK", "departureDate": "2025-12-20" }
+  ],
+  "passengers": 1,
+  "cabinClass": "economy"
+}'
 ```
 
 Configuration lives in [template/config.json](template/config.json) and is loaded
@@ -586,7 +623,7 @@ GA315_Garuda     price 1,850,000  duration 225    stops 1   → 6.56
 ```
 
 Note the cheapest flight is **not** the winner. `QZ7250_AirAsia` costs 485,000
-but takes 260 minutes with 1 stop, so it scores just `50.00` — price alone
+but takes 260 minutes with 1 stop, so it scores just `50.00`. Price alone
 (weight 0.5) can't outvote zeros on duration and stops. `QZ532_AirAsia` costs
 110,000 more yet is nonstop and tied for fastest, so it wins at `95.97`.
 

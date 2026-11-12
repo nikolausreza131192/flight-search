@@ -96,8 +96,14 @@ func (s *SearchUseCase) searchRoundTrip(ctx context.Context, req SearchRequest) 
 	_, _, returnJourney := s.runLeg(ctx, returnReq)
 
 	itineraries := buildItineraries(departureJourney, returnJourney)
+
+	// filters and sort are dropped for round-trip, so keep them out of the echo.
+	criteria := toCriteria(req)
+	criteria.Filters = nil
+	criteria.Sort = nil
+
 	return SearchResponse{
-		SearchCriteria: toCriteria(req),
+		SearchCriteria: criteria,
 		Metadata: Metadata{
 			TotalResults:       len(itineraries),
 			ProvidersQueried:   outMeta.ProvidersQueried,
@@ -314,6 +320,22 @@ func toCriteria(req SearchRequest) entity.SearchCriteria {
 	}
 	if req.ReturnDate != nil {
 		criteria.ReturnDate = *req.ReturnDate
+	}
+	if req.Filters != nil {
+		criteria.Filters = &entity.Filters{
+			MinPrice:           req.Filters.MinPrice,
+			MaxPrice:           req.Filters.MaxPrice,
+			MaxStops:           req.Filters.MaxStops,
+			Airlines:           req.Filters.Airlines,
+			DepartureTimeFrom:  req.Filters.DepartureTimeFrom,
+			DepartureTimeTo:    req.Filters.DepartureTimeTo,
+			ArrivalTimeFrom:    req.Filters.ArrivalTimeFrom,
+			ArrivalTimeTo:      req.Filters.ArrivalTimeTo,
+			MaxDurationMinutes: req.Filters.MaxDurationMinutes,
+		}
+	}
+	if req.Sort != nil {
+		criteria.Sort = &entity.SortSpec{By: req.Sort.By, Order: req.Sort.Order}
 	}
 	for _, leg := range req.MultiCity {
 		criteria.MultiCity = append(criteria.MultiCity, entity.MultiCityLeg{
