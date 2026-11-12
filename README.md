@@ -81,7 +81,7 @@ To run with custom config, edit `template/config.json`.
 
 ## API
 
-- `POST /api/v1/flights/search` → aggregate flight results. Body is JSON.
+`POST /api/v1/flights/search` → aggregate flight results. Body is JSON.
 
 | Field           | Type           | Required | Notes                                           |
 |-----------------|----------------|----------|-------------------------------------------------|
@@ -185,12 +185,10 @@ Round-trip request (`returnDate` turns a one-way search into a round-trip):
 }
 ```
 
-The response reuses the envelope above and adds an `itineraries` array pairing
-each departure journey with each return journey. `flights` holds the departure
-journey, and `metadata.total_results` is the number of itineraries (see
-[why](#why-total_results-counts-itineraries)). Counts are trimmed to one flight
-and two itineraries here; objects are shown in full. `filters` and `sort` do not
-apply to round-trip — itineraries are always ranked by `best_value`:
+The response adds an `itineraries` array pairing each departure journey with each return journey. 
+`flights` holds the departure journey, and `metadata.total_results` is the number of itineraries (see
+[why](#why-total_results-counts-itineraries)). `filters` and `sort` do not
+apply to round-trip. Itineraries are always ranked by `best_value`:
 
 ```json
 {
@@ -385,7 +383,7 @@ one-way search, by contrast, sets `total_results = len(flights)`, and a
 multi-city search sums each leg's `total_results`.
 
 
-Multi-city request (`multiCity` takes precedence over one-way/round-trip):
+Multi-city request (`multiCity` have higher priority over one-way/round-trip):
 
 ```json
 {
@@ -538,24 +536,23 @@ best_value_score = round(100 × (0.5 × price + 0.3 × duration + 0.2 × stops),
 Key properties:
 
 - **Cheaper/faster/fewer-stops is better.** Each factor is *inverse*-normalized,
-  so the cheapest flight scores `1.0` on price and the most expensive `0.0`; the
-  same holds for duration, and a nonstop flight scores `1.0` for stops (or `1.0`
-  for every flight when none has a stop).
+  so the cheapest flight scores `1.0` on price and the most expensive `0.0`. The
+  same holds for duration, and a nonstop flight scores `1.0` for stops.
 - **Bounds come from the current result set, so scores are relative, not
   absolute.** The best flight in a set always approaches `100` and the worst
   approaches `0`, regardless of whether the set is cheap or expensive. Adding or
-  removing flights (or changing `filters`) re-computes every score, so the same
+  removing flights (or changing `filters`) recomputes every score, so the same
   flight can score differently across two searches.
-- **Computed after filtering** — the min/max bounds are taken from the filtered,
+- **Computed after filtering.** The min/max bounds are taken from the filtered,
   passenger-scaled set, so filters shape the ranking baseline too.
 - **Itineraries are scored the same way**, via a proxy flight built from
   `total_price`, `total_duration` and summed `stops`
   ([scoreItineraries](internal/usecase/search.go)), so round-trip options rank on
   the identical formula.
-- **Weights are compile-time constants** (`WeightPrice`, `WeightDuration`,
-  `WeightStops`) — retuning the ranking means editing the constants, not config.
+- **Weights are constants** (`WeightPrice`, `WeightDuration`,
+  `WeightStops`). Tuning the ranking means editing the constants, not config.
 
-#### Worked example
+#### Example
 
 A one-way `CGK→DPS` search returns 13 flights. The scoring bounds are derived
 from that set:
@@ -595,8 +592,8 @@ but takes 260 minutes with 1 stop, so it scores just `50.00` — price alone
 
 ## Rate limiting
 
-**Configuration.** Per airline in `template/config.json` (`rate_limit`,
-`rate_limit_window`); `rate_limit <= 0` disables limiting:
+Rate limit configuration for each airline is in `template/config.json` (`rate_limit`,
+`rate_limit_window`). `rate_limit <= 0` disables this feature:
 
 | Airline | Code | Limit   |
 |---------|------|---------|

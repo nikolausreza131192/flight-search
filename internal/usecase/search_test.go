@@ -74,8 +74,6 @@ func TestSearchIsCached(t *testing.T) {
 	}
 }
 
-// TestSearchCacheHitReportsOwnDuration guards against serving the stored entry's
-// search_time_ms: a cache hit must report the duration of this request.
 func TestSearchCacheHitReportsOwnDuration(t *testing.T) {
 	cfg, err := config.Load("../../template/config.json")
 	if err != nil {

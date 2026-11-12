@@ -8,7 +8,6 @@ import (
 	"bookcabin/config"
 )
 
-// readFixture loads one of the mock payloads from the template directory.
 func readFixture(t *testing.T, name string) []byte {
 	t.Helper()
 	data, err := os.ReadFile(filepath.Join("..", "..", "..", "template", name))

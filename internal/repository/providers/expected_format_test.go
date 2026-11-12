@@ -6,10 +6,6 @@ import (
 	"bookcabin/config"
 )
 
-// TestNormalizeAirAsiaMatchesExpected locks the normalized output of the AirAsia
-// mock payload to the unified format shown in expected_result.json. Timestamps
-// are intentionally excluded: the sample file carries placeholder Unix values
-// that do not correspond to its own RFC3339 datetimes.
 func TestNormalizeAirAsiaMatchesExpected(t *testing.T) {
 	flights, err := NewAirAsia(config.Config{}).normalize(readFixture(t, "airasia_search_response.json"))
 	if err != nil {
@@ -74,9 +70,6 @@ func TestNormalizeAirAsiaMatchesExpected(t *testing.T) {
 	}
 }
 
-// TestNormalizeGarudaConnectingFlight verifies the multi-segment inconsistency
-// (top level arrival points at the first stop, segments reveal the real
-// destination) is resolved.
 func TestNormalizeGarudaConnectingFlight(t *testing.T) {
 	flights, err := NewGaruda(config.Config{}).normalize(readFixture(t, "garuda_indonesia_search_response.json"))
 	if err != nil {
