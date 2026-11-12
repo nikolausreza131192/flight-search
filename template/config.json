@@ -1,0 +1,51 @@
+{
+  "addr": ":8080",
+  "log_level": "info",
+  "cache_ttl": "5m",
+  "search_timeout": "3s",
+  "max_retries": 2,
+  "retry_base_delay": "50ms",
+  "simulate_latency": true,
+  "airlines": {
+    "GI": {
+      "search": {
+        "file": "garuda_indonesia_search_response.json",
+        "rate_limit": 50,
+        "rate_limit_window": "1m",
+        "min_delay": "50ms",
+        "max_delay": "100ms",
+        "failure_rate": 0
+      }
+    },
+    "JT": {
+      "search": {
+        "file": "lion_air_search_response.json",
+        "rate_limit": 40,
+        "rate_limit_window": "1m",
+        "min_delay": "100ms",
+        "max_delay": "200ms",
+        "failure_rate": 0
+      }
+    },
+    "ID": {
+      "search": {
+        "file": "batik_air_search_response.json",
+        "rate_limit": 20,
+        "rate_limit_window": "1m",
+        "min_delay": "200ms",
+        "max_delay": "400ms",
+        "failure_rate": 0
+      }
+    },
+    "QZ": {
+      "search": {
+        "file": "airasia_search_response.json",
+        "rate_limit": 10,
+        "rate_limit_window": "1m",
+        "min_delay": "50ms",
+        "max_delay": "150ms",
+        "failure_rate": 0.1
+      }
+    }
+  }
+}
